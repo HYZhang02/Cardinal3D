@@ -206,13 +206,13 @@ public:
         Merge the two faces on either side of an edge, returning a
         pointer to the merged face.
     */
-    std::optional<FaceRef> erase_edge(EdgeRef e);
+    std::optional<FaceRef> erase_edge(EdgeRef e, bool validate = true);
 
     /*
         Collapse an edge, returning a pointer to the collapsed vertex
     */
-    std::optional<VertexRef> collapse_edge(EdgeRef e);
-
+    std::optional<VertexRef> collapse_edge(EdgeRef e, bool validate = true);
+    bool check_edge_collapse_eligibility(EdgeRef e);
     /*
         Collapse a face, returning a pointer to the collapsed vertex
     */
@@ -244,6 +244,12 @@ public:
         Insets a face into the given face, returning a pointer to the new center face
     */
     std::optional<FaceRef> bevel_face(FaceRef f);
+
+    /*
+		Splits a face by creating a new edge from the vertex of start halfedge to the vertex of end halfedge.
+        The returning halfedge is guaranteed to start at the start vertex and adjacent to the old face.
+	 */
+    std::optional<HalfedgeRef> split_face(HalfedgeRef start, HalfedgeRef end, bool validate = true);
 
     /*
         Computes vertex positions for a face that was just created by beveling a vertex,
@@ -353,6 +359,9 @@ public:
         // The vertex position
         Vec3 pos;
 
+        std::list<HalfedgeRef> get_halfedges();
+        std::list<FaceRef> get_faces();
+        std::list<EdgeRef> get_edges();
     private:
         Vertex(unsigned int id) : _id(id) {
         }
@@ -449,6 +458,10 @@ public:
             return _next;
         }
 
+        HalfedgeRef prev();
+        
+        HalfedgeCRef prev() const;
+
         // Retrieves the associated vertex
         VertexRef& vertex() {
             return _vertex;
@@ -464,7 +477,9 @@ public:
         EdgeCRef edge() const {
             return _edge;
         }
-
+        Vec3 vector();
+        Vec3 dir();
+        VertexRef endVertex();
         // Retrieves the associated face
         FaceRef& face() {
             return _face;
@@ -545,6 +560,8 @@ public:
     FaceRef new_face(bool boundary = false) {
         return faces.insert(faces.end(), Face(next_id++, boundary));
     }
+
+    EdgeRef new_halfedge_pair(VertexRef start, VertexRef end);
 
     /*
         These methods return iterators to the beginning and end of the lists of

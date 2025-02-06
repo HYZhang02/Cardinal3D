@@ -1,6 +1,7 @@
 
 #include "halfedge.h"
 
+#include <iostream>
 #include <map>
 #include <set>
 #include <sstream>
@@ -129,8 +130,19 @@ unsigned int Halfedge_Mesh::Vertex::degree() const {
 unsigned int Halfedge_Mesh::Face::degree() const {
     unsigned int d = 0;
     HalfedgeCRef h = _halfedge;
+    unsigned int* hs = new unsigned int[100];
     do {
+        hs[d] = h->id();
         d++;
+        if(d == 100) {
+            std::cout << "Error: degree out of bond, face id " << this->id() << " with he id "
+                      << this->_halfedge->id() << '\n';
+            for(int i = 0; i < 100; i++) {
+                std::cout << hs[i] << ' ';
+            }
+            std::cout << '\n';
+            throw std::invalid_argument("degree oob");
+        }
         h = h->next();
     } while(h != _halfedge);
     return d;
